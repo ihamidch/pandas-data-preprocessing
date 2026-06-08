@@ -1,20 +1,64 @@
-# Retail ETL Data Cleaning Pipeline
+# Enterprise Retail ETL & Data Preprocessing Pipeline
 
-A Python-based data cleaning and extraction pipeline designed to transform raw, structurally compromised retail CSV files into clean datasets ready for relational database engines or analytics.
+[![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org)
+[![Pandas](https://img.shields.io/badge/library-pandas-violet)](https://pandas.pydata.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Technical Highlights & Features
-- **Dynamic Structural Adaptability:** Built resilient schema mappings targeting headers by data matrix positions, eliminating explicit `KeyError` restrictions.
-- **Relational Integrity Mapping:** Handled string splits for unformatted description fields with fallbacks to avoid text length boundary exceptions.
-- **Type Safety Realignment:** Evaluated dataset schemas to convert mixed floating numbers down to analytical standard integers and text elements.
-- **Relative Path Environment Syncing:** Implemented `os.path` file-loading boundaries to guarantee execution compatibility across Linux, Mac, and Windows deployment setups.
+A robust, production-ready **Extract, Transform, Load (ETL)** pipeline architected to ingest, sanitize, and normalize structurally compromised retail datasets. This framework resolves schema drift, missing relational keys, and data-type anomalies, transforming raw transactional logs into high-fidelity, analytics-ready structures optimized for downstream Data Warehouses (e.g., Snowflake, BigQuery) or BI tooling.
 
-## Pipeline Architecture & Transformations
-1. **Products Dataset:** Imputes missing primary keys using sequential ranges, isolates product taxonomy through tokenized string splits, and eliminates regional naming variations (`Gray` vs `Grey`).
-2. **Shipping Dataset:** Standardizes missing category fields with a default business fallback (`Expedited`) and enforces data format uniformity on unique order tags.
-3. **Stores Dataset:** Automatically purges operational records that do not contain valid structural identifiers.
-4. **Transactions Dataset:** Identifies and drops exact matching data duplicates while converting time elements into discrete categorical string entities.
+---
 
-## Execution
-Ensure you maintain your source datasets within a local directory named `./data/`. Run the module using the terminal wrapper command:
-```bash
+## 🛠️ Core Engineering Highlights
+
+* **Schema Drift & Variation Resilience:** Implemented zero-dependency position-based header targeting (`columns[0]`, `columns[1]`). This shields the pipeline from upstream column renaming and eliminates volatile `KeyError` exceptions.
+* **Defensive String Tokenization:** Formulated a safe, conditional string-splitting mechanism with structural fallbacks to handle variable token lengths without triggering index boundary crashes.
+* **Strict Type-Safety & Standardization:** Enforced structural data integrity by normalizing mixed floating-point artifacts into discrete integers (`int`) and casting time-series fields to explicit categorical string objects (`str`).
+* **Environment-Agnostic Execution:** Engineered absolute runtime portability using OS-independent filesystem pathing boundaries (`os.path`), ensuring seamless cross-platform execution (Linux/macOS/Windows).
+
+---
+
+## 📐 Data Architecture & Cleaning Logic
+
+The pipeline processes four relational business datasets through a decoupled execution flow:
+
+### 1. Inventory / Products Stream
+* **Primary Key Imputation:** Programmatically calculates downstream index gaps and infuses sequential surrogates (`1, 2, 3...`) into null identifier fields.
+* **Feature Extraction:** Parses and tokenizes unformatted string records into separate, discrete attributes (`type` and `colour`).
+* **Lexical Standardization:** Normalizes regional string permutations (e.g., maps `Gray` to standard `Grey`) to optimize string matching for downstream analytics.
+
+### 2. Fulfillment / Shipping Stream
+* **Business Rule Imputation:** Mitigates risk from missing fields by dynamically injecting categorical fallbacks (`Expedited`) into null records.
+* **Relational Integrity Alignment:** Forces composite key structures (`orderid`) to pure integers, stripping accidental float padding (`.0`).
+
+### 3. Entity / Stores Stream
+* **Null Record Pruning:** Purges operational rows missing critical structural primary keys (`store_id`) to prevent Referential Integrity failures in target databases.
+* **Index Realignment:** Re-indexes the underlying structural array post-deletion to preserve sequential memory addressing.
+
+### 4. Ledger / Transactions Stream
+* **Data Deduplication:** Executes an identity-based evaluation across the feature space to drop duplicated ledger entries, ensuring data **idempotency**.
+* **Dimensional Segmentation:** Isolates and casts temporal metrics (`year`, `month`, `day`) into discrete string categories to prevent math operations on date parts.
+
+---
+
+## 📁 Repository Structure
+
+```text
+pandas-data-preprocessing/
+│
+├── data/                      <-- Local Source Data Ingestion Landing Zone
+│   ├── products.csv
+│   ├── Shipping.csv
+│   ├── Stores.csv
+│   └── Transactions.csv
+│
+├── data_cleaning.py           <-- Modularized Functional ETL Pipeline Engine
+└── README.md                  <-- Technical Pipeline Documentation
+
+git clone [https://github.com/ihamidch/pandas-data-preprocessing.git](https://github.com/ihamidch/pandas-data-preprocessing.git)
+cd pandas-data-preprocessing
+
 python data_cleaning.py
+👨‍💻 Author
+ (Ihamidch) - Data Engineering & Preprocessing Architect
+
+GitHub: @ihamidch
